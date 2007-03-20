@@ -10,10 +10,12 @@ extra-source-files: COPYING
 homepage: http://software.complete.org/gmacro
 Category: Network
 Synopsis: Keyboard macro record/binding for X
-Build-Depends: base, unix, gtk, gconf
+Build-Depends: base, unix, gtk, gconf, glade
 
 Executable: test
 Main-Is: test.hs
 GHC-Options: -O2
-Extensions: ExistentialQuantification, OverlappingInstances,
-    UndecidableInstances
+
+Executable: hellohaskell
+Main-Is: hellohaskell.hs
+GHC-Options: -O2
