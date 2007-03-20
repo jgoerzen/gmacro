@@ -10,7 +10,7 @@ extra-source-files: COPYING
 homepage: http://software.complete.org/gmacro
 Category: Network
 Synopsis: Keyboard macro record/binding for X
-Build-Depends: haskell98, unix, gtk, gconf
+Build-Depends: base, unix, gtk, gconf
 
 Executable: test
 Main-Is: test.hs
