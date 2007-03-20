@@ -12,10 +12,6 @@ Category: Network
 Synopsis: Keyboard macro record/binding for X
 Build-Depends: base, unix, gtk, gconf, glade
 
-Executable: test
-Main-Is: test.hs
-GHC-Options: -O2
-
-Executable: hellohaskell
-Main-Is: hellohaskell.hs
+Executable: gmacro
+Main-Is: gmacro.hs
 GHC-Options: -O2
