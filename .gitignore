@@ -1,1 +1,8 @@
 *~
+*.hi
+*.ho
+dist
+*.o
+*.swp
+.setup-config
+setup
