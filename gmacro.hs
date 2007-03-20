@@ -31,9 +31,11 @@ initList xml dir =
        render <- cellRendererTextNew
        namecol <- treeViewColumnNewWithAttributes "Macro" render []
        bindcol <- treeViewColumnNewWithAttributes "Connected Shortcut" render []
+       treeViewColumnSetSizing bindcol TreeViewColumnAutosize
                   
        treeViewAppendColumn list namecol
-       treeViewAppendColumn list bindcol >>= print
+       treeViewAppendColumn list bindcol
+
        
        treeViewSetHeadersVisible list True
        return list
