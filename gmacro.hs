@@ -3,13 +3,15 @@
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
+import qualified Graphics.UI.Gtk.ModelView as MV
 import System.Directory
 
 main = do
     initGUI
     Just xml <- xmlNew "gmacro.glade"
     macdir <- initDir xml
-    list <- initList xml macdir
+    (list, model) <- initList xml
+    loadList model macdir
 
     window <- xmlGetWidget xml castToWindow "gmacrow"
     onDestroy window mainQuit
@@ -24,21 +26,41 @@ initDir xml = do
     createDirectoryIfMissing False dir
     return dir
 
-initList xml dir = 
+initList xml = 
     do list <- xmlGetWidget xml castToTreeView "rectree"
-       model <- listStoreNew [TMstring, TMstring]
+       model <- MV.listStoreNew []
        treeViewSetModel list model
        render <- cellRendererTextNew
-       namecol <- treeViewColumnNewWithAttributes "Macro" render []
-       bindcol <- treeViewColumnNewWithAttributes "Connected Shortcut" render []
+       render2 <- cellRendererTextNew
+
+       namecol <- MV.treeViewColumnNew
+       bindcol <- MV.treeViewColumnNew
+
+       MV.treeViewColumnSetTitle namecol "Macro"
+       MV.treeViewColumnSetTitle bindcol "Connected Shortcut"
+       putStrLn "41"
+       MV.cellLayoutSetAttributes namecol render model $ \row -> 
+             [MV.cellText := fst row]
+       MV.cellLayoutSetAttributes bindcol render2 model $ \row ->
+             [MV.cellText := snd row]
+
+       putStrLn "47"
        treeViewColumnSetSizing bindcol TreeViewColumnAutosize
                   
        treeViewAppendColumn list namecol
        treeViewAppendColumn list bindcol
-
        
        treeViewSetHeadersVisible list True
-       return list
+       return (list, model)
+
+loadList model macdir = do
+    dir <- getAppUserDataDirectory "gmacro"
+    files <- getDirectoryContents dir
+    MV.listStoreClear model
+    mapM_ addrow files
+    where addrow file = do
+              putStrLn file
+              MV.listStoreAppend model (file, show file)
 
 test = do 
     Just xml <- xmlNew "gmacro.glade"
