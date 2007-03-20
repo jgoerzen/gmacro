@@ -26,12 +26,17 @@ initDir xml = do
 
 initList xml dir = 
     do list <- xmlGetWidget xml castToTreeView "rectree"
-       namecol <- treeViewColumnNew
-       treeViewColumnSetTitle namecol "Macro"
-       bindcol <- treeViewColumnNew
-       treeViewColumnSetTitle bindcol "Connected Shortcut"
+       model <- listStoreNew [TMstring, TMstring]
+       treeViewSetModel list model
+       render <- cellRendererTextNew
+       namecol <- treeViewColumnNewWithAttributes "Macro" render []
+       bindcol <- treeViewColumnNewWithAttributes "Connected Shortcut" render []
+                  
        treeViewAppendColumn list namecol
-       treeViewAppendColumn list bindcol
+       treeViewAppendColumn list bindcol >>= print
+       
+       treeViewSetHeadersVisible list True
+       return list
 
 test = do 
     Just xml <- xmlNew "gmacro.glade"
