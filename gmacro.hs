@@ -3,10 +3,38 @@
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
+import System.Directory
 
 main = do
     initGUI
-    Just xml <- xmlNew "hellohaskell.glade"
+    Just xml <- xmlNew "gmacro.glade"
+    macdir <- initDir xml
+    list <- initList xml macdir
+
+    window <- xmlGetWidget xml castToWindow "gmacrow"
+    onDestroy window mainQuit
+
+    closebt <- xmlGetWidget xml castToButton "closebt"
+    onClicked closebt (widgetDestroy window)
+
+    mainGUI
+
+initDir xml = do
+    dir <- getAppUserDataDirectory "gmacro"
+    createDirectoryIfMissing False dir
+    return dir
+
+initList xml dir = 
+    do list <- xmlGetWidget xml castToTreeView "rectree"
+       namecol <- treeViewColumnNew
+       treeViewColumnSetTitle namecol "Macro"
+       bindcol <- treeViewColumnNew
+       treeViewColumnSetTitle bindcol "Connected Shortcut"
+       treeViewAppendColumn list namecol
+       treeViewAppendColumn list bindcol
+
+test = do 
+    Just xml <- xmlNew "gmacro.glade"
     window <- xmlGetWidget xml castToWindow "window1"
     onDestroy window mainQuit
     clbutton <- xmlGetWidget xml castToButton "button2"
