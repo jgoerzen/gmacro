@@ -1,3 +1,6 @@
+{- Copyright (c) 2007 John Goerzen <jgoerzen@complete.org>
+   Please see the COPYRIGHT file -}
+
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 
