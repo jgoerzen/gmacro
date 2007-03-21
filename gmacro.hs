@@ -12,13 +12,14 @@ main = do
     initGUI
     Just xml <- xmlNew "gmacro.glade"
     macdir <- initDir xml
-    (list, model) <- initList xml
-    loadList model macdir
 
     window <- xmlGetWidget xml castToWindow "gmacrow"
     onDestroy window mainQuit
 
     buttons <- initButtons xml window
+
+    (list, model) <- initList xml buttons
+    loadList model macdir
 
     mainGUI
 

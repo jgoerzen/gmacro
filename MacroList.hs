@@ -9,6 +9,7 @@ import qualified Graphics.UI.Gtk.ModelView as MV
 import System.Directory
 import Metacity
 import Utils
+import Buttons
 
 {- | Initialize the storage directory -}
 initDir xml = do
@@ -17,7 +18,7 @@ initDir xml = do
     return dir
 
 {- | Initialize the display list -}
-initList xml = 
+initList xml buttons = 
     do list <- xmlGetWidget xml MV.castToTreeView "rectree"
        model <- MV.listStoreNew [("fake", "fake")]
        MV.treeViewSetModel list model
@@ -42,7 +43,13 @@ initList xml =
        MV.treeViewAppendColumn list bindcol
 
        MV.treeViewSetHeadersVisible list True
+
+       selection <- treeViewGetSelection list
+       treeSelectionSetSelectFunction selection selectfunc
        return (list, model)
+    where selectfunc [] = disablePerMacro buttons >> return True
+          selectfunc _ = enablePerMacro buttons >> return True
+
 
 {- | Load the files into the list -}
 loadList model macdir = do
