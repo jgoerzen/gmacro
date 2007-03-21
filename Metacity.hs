@@ -29,7 +29,8 @@ getMacroBindings = do
        filter (isPrefixOf "gmacroplay " . snd) $
        commands
     
-    where gc2str ((x, GConfValueString s):xs) = (x, s):gc2str xs
+    where gc2str [] = []
+          gc2str ((x, GConfValueString s):xs) = (x, s):gc2str xs
           gc2str (_:xs) = gc2str xs
 {-
 {- | Binds a new macro. -}
