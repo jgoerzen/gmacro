@@ -7,6 +7,8 @@ import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Glade
 import qualified Graphics.UI.Gtk.ModelView as MV
 import System.Directory
+import Metacity
+import Utils
 
 {- | Initialize the storage directory -}
 initDir xml = do
@@ -47,9 +49,13 @@ loadList model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files' <- getDirectoryContents dir
     let files = filter (\f -> f /= "." && f /= "..") files'
+    bindings <- getMacroBindings
 
     MV.listStoreClear model
-    mapM_ addrow files
-    where addrow file = 
-              MV.listStoreAppend model (file, show file)
+    mapM_ (addrow bindings) files
+    where addrow bindings file = 
+           MV.listStoreAppend model (file, binding)
+           where binding = case lookup file bindings of
+                              Nothing -> "none"
+                              Just x -> x
 
