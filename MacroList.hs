@@ -10,6 +10,7 @@ import System.Directory
 import Metacity
 import Utils
 import Buttons
+import Control.Monad
 
 {- | Initialize the storage directory -}
 initDir xml = do
@@ -45,11 +46,18 @@ initList xml buttons =
        MV.treeViewSetHeadersVisible list True
 
        selection <- treeViewGetSelection list
-       treeSelectionSetSelectFunction selection selectfunc
+       onSelectionChanged selection (selectfunc selection)
+       treeSelectionSetMode selection SelectionMultiple
        return (list, model)
-    where selectfunc [] = disablePerMacro buttons >> return True
-          selectfunc _ = enablePerMacro buttons >> return True
-
+    where selectfunc selection = do
+              rows <- treeSelectionGetSelectedRows selection
+              print rows
+              if length rows == 0
+                 then disablePerMacro buttons
+                 else enablePerMacro buttons
+              when (length rows > 1)
+                   (mapM_ (\x -> widgetSetSensitivity x False)
+                         [renamebt buttons, connectbt buttons])
 
 {- | Load the files into the list -}
 loadList model macdir = do
