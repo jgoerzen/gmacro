@@ -6,6 +6,7 @@ import Graphics.UI.Gtk.Glade
 import qualified Graphics.UI.Gtk.ModelView as MV
 import System.Directory
 import MacroList
+import Buttons
 
 main = do
     initGUI
@@ -17,8 +18,7 @@ main = do
     window <- xmlGetWidget xml castToWindow "gmacrow"
     onDestroy window mainQuit
 
-    closebt <- xmlGetWidget xml castToButton "closebt"
-    onClicked closebt (widgetDestroy window)
+    buttons <- initButtons xml window
 
     mainGUI
 
