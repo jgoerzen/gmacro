@@ -46,18 +46,30 @@ initList xml buttons =
        MV.treeViewSetHeadersVisible list True
 
        selection <- treeViewGetSelection list
-       onSelectionChanged selection (selectfunc selection)
+       onSelectionChanged selection (selectfunc list model)
        treeSelectionSetMode selection SelectionMultiple
        return (list, model)
-    where selectfunc selection = do
-              rows <- treeSelectionGetSelectedRows selection
-              print rows
-              if length rows == 0
+    where selectfunc list model = do
+              items <- getSelectedItems list model
+              print items
+              if length items == 0
                  then disablePerMacro buttons
-                 else enablePerMacro buttons
-              when (length rows > 1)
+                 else do enablePerMacro buttons
+                         -- Can't disable already-disabled macros
+                         when (filter ((/=) "none" . snd) items == [])
+                               (widgetSetSensitivity (disconnectbt buttons)
+                                False)
+
+              -- Can't rename or connect multiple buttons
+              when (length items > 1)
                    (mapM_ (\x -> widgetSetSensitivity x False)
                          [renamebt buttons, connectbt buttons])
+
+getSelectedItems list model = do
+    selection <- treeViewGetSelection list
+    rows <- treeSelectionGetSelectedRows selection
+    mapM row2data rows
+    where row2data [i] = MV.listStoreGetValue model i
 
 {- | Load the files into the list -}
 loadList model macdir = do
