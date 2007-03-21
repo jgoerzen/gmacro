@@ -32,15 +32,15 @@ initDir xml = do
     return dir
 
 initList xml = 
-    do list <- xmlGetWidget xml castToTreeView "rectree"
+    do list <- xmlGetWidget xml MV.castToTreeView "rectree"
        putStrLn "36"
        model <- MV.listStoreNew [("fake", "fake")]
        putStrLn "38"
-       treeViewSetModel list model
+       MV.treeViewSetModel list model
        putStrLn "40"
-       render <- cellRendererTextNew
+       render <- MV.cellRendererTextNew
        putStrLn "42"
-       render2 <- cellRendererTextNew
+       render2 <- MV.cellRendererTextNew
 
        putStrLn "41a"
 
@@ -52,20 +52,22 @@ initList xml =
        MV.treeViewColumnSetTitle namecol "Macro"
        MV.treeViewColumnSetTitle bindcol "Connected Shortcut"
        putStrLn "41"
+       MV.treeViewColumnPackStart namecol render True
+       MV.treeViewColumnPackStart bindcol render2 True
        MV.cellLayoutSetAttributes namecol render model $ \row -> 
              [MV.cellText := fst row]
        MV.cellLayoutSetAttributes bindcol render2 model $ \row ->
              [MV.cellText := snd row]
 
        putStrLn "47"
-       treeViewColumnSetSizing bindcol TreeViewColumnAutosize
+       MV.treeViewColumnSetSizing bindcol TreeViewColumnAutosize
                   
-       treeViewAppendColumn list namecol
-       treeViewAppendColumn list bindcol
+       MV.treeViewAppendColumn list namecol
+       MV.treeViewAppendColumn list bindcol
 
        putStrLn "62"
        
-       treeViewSetHeadersVisible list True
+       MV.treeViewSetHeadersVisible list True
        return (list, model)
 
 loadList model macdir = do
