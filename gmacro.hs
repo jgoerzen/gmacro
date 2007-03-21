@@ -7,6 +7,7 @@ import qualified Graphics.UI.Gtk.ModelView as MV
 import System.Directory
 import MacroList
 import Buttons
+import Actions(initActions)
 
 main = do
     initGUI
@@ -20,6 +21,8 @@ main = do
 
     (list, model) <- initList xml buttons
     loadList model macdir
+
+    initActions buttons list model window
 
     mainGUI
 
