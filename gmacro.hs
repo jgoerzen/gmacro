@@ -9,9 +9,13 @@ import System.Directory
 main = do
     initGUI
     Just xml <- xmlNew "gmacro.glade"
+    putStrLn "12"
     macdir <- initDir xml
+    putStrLn "14"
     (list, model) <- initList xml
+    putStrLn "16"
     loadList model macdir
+    putStrLn "18"
 
     window <- xmlGetWidget xml castToWindow "gmacrow"
     onDestroy window mainQuit
@@ -19,6 +23,7 @@ main = do
     closebt <- xmlGetWidget xml castToButton "closebt"
     onClicked closebt (widgetDestroy window)
 
+    putStrLn "26"
     mainGUI
 
 initDir xml = do
@@ -28,13 +33,21 @@ initDir xml = do
 
 initList xml = 
     do list <- xmlGetWidget xml castToTreeView "rectree"
-       model <- MV.listStoreNew []
+       putStrLn "36"
+       model <- MV.listStoreNew [("fake", "fake")]
+       putStrLn "38"
        treeViewSetModel list model
+       putStrLn "40"
        render <- cellRendererTextNew
+       putStrLn "42"
        render2 <- cellRendererTextNew
+
+       putStrLn "41a"
 
        namecol <- MV.treeViewColumnNew
        bindcol <- MV.treeViewColumnNew
+
+       putStrLn "46"
 
        MV.treeViewColumnSetTitle namecol "Macro"
        MV.treeViewColumnSetTitle bindcol "Connected Shortcut"
@@ -49,6 +62,8 @@ initList xml =
                   
        treeViewAppendColumn list namecol
        treeViewAppendColumn list bindcol
+
+       putStrLn "62"
        
        treeViewSetHeadersVisible list True
        return (list, model)
@@ -56,7 +71,9 @@ initList xml =
 loadList model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files <- getDirectoryContents dir
+    putStrLn "70"
     MV.listStoreClear model
+    putStrLn "72"
     mapM_ addrow files
     where addrow file = do
               putStrLn file
