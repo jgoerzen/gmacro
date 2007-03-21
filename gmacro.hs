@@ -9,13 +9,9 @@ import System.Directory
 main = do
     initGUI
     Just xml <- xmlNew "gmacro.glade"
-    putStrLn "12"
     macdir <- initDir xml
-    putStrLn "14"
     (list, model) <- initList xml
-    putStrLn "16"
     loadList model macdir
-    putStrLn "18"
 
     window <- xmlGetWidget xml castToWindow "gmacrow"
     onDestroy window mainQuit
@@ -23,7 +19,6 @@ main = do
     closebt <- xmlGetWidget xml castToButton "closebt"
     onClicked closebt (widgetDestroy window)
 
-    putStrLn "26"
     mainGUI
 
 initDir xml = do
@@ -33,25 +28,16 @@ initDir xml = do
 
 initList xml = 
     do list <- xmlGetWidget xml MV.castToTreeView "rectree"
-       putStrLn "36"
        model <- MV.listStoreNew [("fake", "fake")]
-       putStrLn "38"
        MV.treeViewSetModel list model
-       putStrLn "40"
        render <- MV.cellRendererTextNew
-       putStrLn "42"
        render2 <- MV.cellRendererTextNew
-
-       putStrLn "41a"
 
        namecol <- MV.treeViewColumnNew
        bindcol <- MV.treeViewColumnNew
 
-       putStrLn "46"
-
        MV.treeViewColumnSetTitle namecol "Macro"
        MV.treeViewColumnSetTitle bindcol "Connected Shortcut"
-       putStrLn "41"
        MV.treeViewColumnPackStart namecol render True
        MV.treeViewColumnPackStart bindcol render2 True
        MV.cellLayoutSetAttributes namecol render model $ \row -> 
@@ -59,23 +45,18 @@ initList xml =
        MV.cellLayoutSetAttributes bindcol render2 model $ \row ->
              [MV.cellText := snd row]
 
-       putStrLn "47"
        MV.treeViewColumnSetSizing bindcol TreeViewColumnAutosize
                   
        MV.treeViewAppendColumn list namecol
        MV.treeViewAppendColumn list bindcol
 
-       putStrLn "62"
-       
        MV.treeViewSetHeadersVisible list True
        return (list, model)
 
 loadList model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files <- getDirectoryContents dir
-    putStrLn "70"
     MV.listStoreClear model
-    putStrLn "72"
     mapM_ addrow files
     where addrow file = do
               putStrLn file
