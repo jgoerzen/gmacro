@@ -27,6 +27,7 @@ gc2str (_:xs) = gc2str xs
 
 getBindings gc =
     do bindings <- gconfAllEntries gc "/apps/metacity/global_keybindings"
+       putStrLn $ "getBindings: " ++ show (gc2str bindings)
        return $ map (\(name, val) -> (drop 4 name, val)) .
           filter (isPrefixOf "run_command_" . fst) . 
           filter ((/=) "disabled" . snd) .
@@ -34,6 +35,7 @@ getBindings gc =
 
 getCommands gc =
     do commands <- gconfAllEntries gc "/apps/metacity/keybinding_commands"
+       putStrLn $ "getCommands: " ++ show (gc2str commands)
        return $ filter (isPrefixOf "command_" . fst) . 
                    filter ((/=) "" . snd) .
                    gc2str $ commands
@@ -46,6 +48,8 @@ bindMacro name shortcut =
     do gc <- gconfGetDefault
        bindings <- getBindings gc
        commands <- getCommands gc
+       print bindings
+       print commands
        let command = findCommand bindings commands
        gconfSet gc ("/apps/metacity/global_keybindings/run_" ++ command)
            shortcut
