@@ -14,16 +14,16 @@ getMacroBindings = do
     bindings <- getBindings gc
     commands <- getCommands gc
 
-    -- Convert both commands and bindings to ("command_x", value)
-    -- also keep disabled/empty ones out of the list.
     return . combine bindings . 
        map (\(x, y) -> (x, drop (length "gmacroplay ") y)) .
        filter (isPrefixOf "gmacroplay " . snd) $
        commands
-    
-    where gc2str [] = []
-          gc2str ((x, GConfValueString s):xs) = (x, s):gc2str xs
-          gc2str (_:xs) = gc2str xs
+
+-- Next 3 funcs: Convert both commands and bindings to ("command_x", value)
+-- also keep disabled/empty ones out of the list.
+gc2str [] = []
+gc2str ((x, GConfValueString s):xs) = (x, s):gc2str xs
+gc2str (_:xs) = gc2str xs
 
 getBindings gc =
     do bindings <- gconfAllEntries gc "/apps/metacity/global_keybindings"
@@ -31,7 +31,6 @@ getBindings gc =
           filter (isPrefixOf "run_command_" . fst) . 
           filter ((/=) "disabled" . snd) .
           gc2str $ bindings
-    
 
 getCommands gc =
     do commands <- gconfAllEntries gc "/apps/metacity/keybinding_commands"
@@ -47,11 +46,11 @@ bindMacro name shortcut =
     do gc <- gconfGetDefault
        bindings <- getBindings gc
        commands <- getCommands gc
-       command <- findCommand bindings commands
+       let command = findCommand bindings commands
        gconfSet gc ("/apps/metacity/global_keybindings/run_" ++ command)
            shortcut
        gconfSet gc ("/apps/metacity/keybinding_commands/" ++ command)
-           "gmacroplay " ++ name
+           ("gmacroplay " ++ name)
     where findCommand [] _ = error "Couldn't find available binding"
           findCommand _ [] = error "Couldn't find available command"
           findCommand ((bcmd,bshort):xs) commands =
@@ -67,10 +66,10 @@ removeBinding name =
     do gc <- gconfGetDefault
        bindings <- getBindings gc
        commands <- getCommands gc
-       let (cmd, _) = find ((==) ("gmacroplay " ++ name) . snd) commands
+       let cmd = find ((==) ("gmacroplay " ++ name) . snd) commands
        case cmd of
             Nothing -> fail "Couldn't find command to unbind"
-            Just x -> do gconfSet gc ("/apps/metacity/global_keybindings/run_"
-                                      ++ x) "disabled"
-                         gconfSet gc ("/apps/metacity/keybinding_commands/" 
-                                      ++ x) ""
+            Just (x,_) -> do 
+               gconfSet gc ("/apps/metacity/global_keybindings/run_"
+                            ++ x) "disabled"
+               gconfSet gc ("/apps/metacity/keybinding_commands/" ++ x) ""

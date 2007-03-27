@@ -22,7 +22,7 @@ main = do
     (list, model) <- initList xml buttons
     loadList model macdir
 
-    initActions buttons list model window
+    initActions buttons list model macdir window 
 
     mainGUI
 
