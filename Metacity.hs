@@ -6,6 +6,7 @@ module Metacity where
 import System.Gnome.GConf.GConfClient
 import Utils
 import Data.List
+import Data.Maybe(catMaybes)
 
 {- | Gets the currently bound macros.  Returns [(Name, Shortcut)]. -}
 getMacroBindings :: IO [(String, String)]
@@ -49,13 +50,16 @@ bindMacro name shortcut =
     do gc <- gconfGetDefault
        bindings <- getBindings gc
        commands <- getCommands gc
-       print bindings
-       print commands
+       let toremove_cmds = map fst . filter ((==) shortcut . snd) $ bindings
+       let toremove_names = map (drop (length "gmacroplay ")) .
+                               catMaybes . map (\x -> lookup x commands)
+                               $ toremove_cmds
        let command = findCommand bindings commands
        gconfSet gc ("/apps/metacity/global_keybindings/run_" ++ command)
            shortcut
        gconfSet gc ("/apps/metacity/keybinding_commands/" ++ command)
            ("gmacroplay " ++ name)
+       mapM_ removeBinding toremove_names
     where findCommand [] _ = error "Couldn't find available binding"
           findCommand _ [] = error "Couldn't find available command"
           findCommand ((bcmd,bshort):xs) commands =
@@ -69,6 +73,7 @@ bindMacro name shortcut =
 removeBinding :: String -> IO ()
 removeBinding name =
     do gc <- gconfGetDefault
+       putStrLn $ "removeBinding " ++ name
        bindings <- getBindings gc
        commands <- getCommands gc
        let cmd = find ((==) ("gmacroplay " ++ name) . snd) commands
