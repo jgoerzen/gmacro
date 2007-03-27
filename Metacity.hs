@@ -11,34 +11,35 @@ import Data.List
 getMacroBindings :: IO [(String, String)]
 getMacroBindings = do
     gc <- gconfGetDefault
-    bindings <- getBindings gc
-    commands <- getCommands gc
+    bindings <- getBindings gc >>= return . filter ((/=) "disabled" . snd)
+    commands <- getCommands gc >>= return . filter ((/=) "" . snd)
+    putStrLn $ "GMB: b: " ++ show bindings
+    putStrLn $ "GMB: c: " ++ show commands
 
-    return . combine bindings . 
+    return . (flip combine) bindings . 
        map (\(x, y) -> (x, drop (length "gmacroplay ") y)) .
        filter (isPrefixOf "gmacroplay " . snd) $
        commands
 
 -- Next 3 funcs: Convert both commands and bindings to ("command_x", value)
--- also keep disabled/empty ones out of the list.
 gc2str [] = []
 gc2str ((x, GConfValueString s):xs) = (x, s):gc2str xs
 gc2str (_:xs) = gc2str xs
 
 getBindings gc =
-    do bindings <- gconfAllEntries gc "/apps/metacity/global_keybindings"
-       putStrLn $ "getBindings: " ++ show (gc2str bindings)
-       return $ map (\(name, val) -> (drop 4 name, val)) .
-          filter (isPrefixOf "run_command_" . fst) . 
-          filter ((/=) "disabled" . snd) .
+    do bindings <- gconfAllEntries gc dir
+       return $ map (\(name, val) -> (drop (length dir + 5) name, val)) .
+          filter (isPrefixOf (dir ++ "/run_command_") . fst) . 
           gc2str $ bindings
+    where dir = "/apps/metacity/global_keybindings"
 
 getCommands gc =
-    do commands <- gconfAllEntries gc "/apps/metacity/keybinding_commands"
-       putStrLn $ "getCommands: " ++ show (gc2str commands)
-       return $ filter (isPrefixOf "command_" . fst) . 
-                   filter ((/=) "" . snd) .
+    do commands <- gconfAllEntries gc dir
+       return $ map (\(x, y) -> (drop (length dir + 1) x, y)) .
+                   filter (isPrefixOf (dir ++ "/command_") . fst) . 
                    gc2str $ commands
+    where dir = "/apps/metacity/keybinding_commands"
+
 
 {- | Binds a new macro. -}
 bindMacro :: String                         -- ^ macro name
