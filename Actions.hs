@@ -12,7 +12,6 @@ import Control.Concurrent
 import Control.Concurrent.MVar
 import System.Process
 import Control.Exception(evaluate)
-import System.IO.Binary(hGetBlocks)
 import Data.List
 
 initActions b list model macdir window xml = do
