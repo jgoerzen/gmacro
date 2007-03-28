@@ -20,19 +20,19 @@ initActions b list model macdir window xml = do
     onClicked (closebt b) (widgetDestroy window)
     onClicked (connectbt b) (connect list model macdir)
     onClicked (disconnectbt b) (disconnectMacro list model macdir)
-    onClicked (newbt b) (record model macdir xml)
+    onClicked (newbt b) (record list model macdir xml)
     onClicked (removebt b) (remove list model macdir window)
 
 connect list model macdir = do
     items <- getSelectedItems list model
     let (name, shortcut) = head items
     Metacity.bindMacro name "<Ctrl><Alt>t"
-    loadList model macdir
+    loadList list model macdir
 
 disconnectMacro list model macdir = do
     items <- getSelectedItems list model
     mapM_ removebind items
-    loadList model macdir
+    loadList list model macdir
     where removebind (name, _) = Metacity.removeBinding name
 
 remove list model macdir window = do
@@ -50,7 +50,7 @@ remove list model macdir window = do
              -- disconnectMacro will loadList itself
          _ -> return ()
     where rmit item = removeFile (macdir ++ "/" ++ item)
-record model macdir xml = do
+record list model macdir xml = do
     recordwin <- xmlGetWidget xml castToWindow "recording"
     finishedbt <- xmlGetWidget xml castToButton "recdonebt"
 
@@ -83,5 +83,5 @@ record model macdir xml = do
               waitForProcess xmacroph
 
               widgetHide recordwin
-              loadList model macdir
+              loadList list model macdir
 

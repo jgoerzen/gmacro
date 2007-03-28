@@ -72,7 +72,7 @@ getSelectedItems list model = do
     where row2data [i] = MV.listStoreGetValue model i
 
 {- | Load the files into the list -}
-loadList model macdir = do
+loadList list model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files' <- getDirectoryContents dir
     let files = filter (\f -> f /= "." && f /= "..") files'
