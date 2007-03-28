@@ -10,6 +10,7 @@ import System.Directory
 import Metacity
 import Utils
 import Buttons
+import Data.List
 import Control.Monad
 
 {- | Initialize the storage directory -}
@@ -75,7 +76,7 @@ getSelectedItems list model = do
 loadList list model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files' <- getDirectoryContents dir
-    let files = filter (\f -> f /= "." && f /= "..") files'
+    let files = sort . filter (\f -> f /= "." && f /= "..") $ files'
     print "ML79"
     bindings <- getMacroBindings
     print "ML80"
