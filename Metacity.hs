@@ -75,11 +75,15 @@ removeBinding name =
     do gc <- gconfGetDefault
        putStrLn $ "removeBinding " ++ name
        bindings <- getBindings gc
+       print 78
        commands <- getCommands gc
+       print 80
        let cmd = find ((==) ("gmacroplay " ++ name) . snd) commands
        case cmd of
-            Nothing -> fail "Couldn't find command to unbind"
+            Nothing -> return () -- No command to unbind
             Just (x,_) -> do 
+               print 85
                gconfSet gc ("/apps/metacity/global_keybindings/run_"
                             ++ x) "disabled"
+               print 88
                gconfSet gc ("/apps/metacity/keybinding_commands/" ++ x) ""

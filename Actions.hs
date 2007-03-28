@@ -11,14 +11,17 @@ import System.IO
 import Control.Concurrent
 import Control.Concurrent.MVar
 import System.Process
+import System.Directory
 import Control.Exception(evaluate)
 import Data.List
+import Text.Printf
 
 initActions b list model macdir window xml = do
     onClicked (closebt b) (widgetDestroy window)
     onClicked (connectbt b) (connect list model macdir)
     onClicked (disconnectbt b) (disconnectMacro list model macdir)
     onClicked (newbt b) (record model macdir xml)
+    onClicked (removebt b) (remove list model macdir window)
 
 connect list model macdir = do
     items <- getSelectedItems list model
@@ -28,10 +31,25 @@ connect list model macdir = do
 
 disconnectMacro list model macdir = do
     items <- getSelectedItems list model
-    mapM_ remove items
+    mapM_ removebind items
     loadList model macdir
-    where remove (name, _) = Metacity.removeBinding name
+    where removebind (name, _) = Metacity.removeBinding name
 
+remove list model macdir window = do
+    items <- getSelectedItems list model
+    let itemstr = concat . intersperse ", " . map fst $ items
+    dlg <- messageDialogNew (Just window) [] MessageQuestion
+            ButtonsYesNo 
+            (printf "Are you sure you want to delete macro %s?" itemstr)
+    response <- dialogRun dlg
+    widgetDestroy dlg
+    case response of
+         ResponseYes -> do
+             mapM_ rmit (map fst items)
+             disconnectMacro list model macdir  -- Remove bindings
+             -- disconnectMacro will loadList itself
+         _ -> return ()
+    where rmit item = removeFile (macdir ++ "/" ++ item)
 record model macdir xml = do
     recordwin <- xmlGetWidget xml castToWindow "recording"
     finishedbt <- xmlGetWidget xml castToButton "recdonebt"

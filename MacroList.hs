@@ -76,12 +76,17 @@ loadList model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files' <- getDirectoryContents dir
     let files = filter (\f -> f /= "." && f /= "..") files'
+    print "ML79"
     bindings <- getMacroBindings
+    print "ML80"
 
+    treeViewGetSelection list >>= treeSelectionUnselectAll
     MV.listStoreClear model
+    print "ML84"
     mapM_ (addrow bindings) files
     where addrow bindings file = 
-           MV.listStoreAppend model (file, binding)
+           do print "ML87"
+              MV.listStoreAppend model (file, binding)
            where binding = case lookup file bindings of
                               Nothing -> "none"
                               Just x -> x
