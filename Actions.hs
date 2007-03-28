@@ -15,6 +15,7 @@ import System.Directory
 import Control.Exception(evaluate)
 import Data.List
 import Text.Printf
+import Control.Monad(when)
 
 initActions b list model macdir window xml = do
     onClicked (closebt b) (widgetDestroy window)
@@ -22,6 +23,7 @@ initActions b list model macdir window xml = do
     onClicked (disconnectbt b) (disconnectMacro list model macdir)
     onClicked (newbt b) (record list model macdir xml)
     onClicked (removebt b) (remove list model macdir window)
+    onClicked (renamebt b) (rename list model macdir xml)
 
 connect list model macdir = do
     items <- getSelectedItems list model
@@ -50,6 +52,57 @@ remove list model macdir window = do
              -- disconnectMacro will loadList itself
          _ -> return ()
     where rmit item = removeFile (macdir ++ "/" ++ item)
+
+rename list model macdir xml = do
+    items <- getSelectedItems list model
+    let item = fst . head $ items
+
+    renamewin <- xmlGetWidget xml castToWindow "renamew"
+    entry <- xmlGetWidget xml castToEntry "rename-entry"
+    okbt <- xmlGetWidget xml castToButton "renameOK"
+    cancelbt <- xmlGetWidget xml castToButton "renameCancel"
+    oldl <- xmlGetWidget xml castToLabel "rename-oldname"
+
+    labelSetText oldl item
+
+    widgetSetSensitivity okbt False
+    onPasteClipboard entry (procentry okbt entry)
+    entrySetText entry ""
+    onKeyPress entry (\_ -> procentry okbt entry >> return False)
+    onKeyRelease entry (\_ -> procentry okbt entry >> return False)
+
+    onDelete renamewin (\_ -> cancel renamewin >> return True)
+    onClicked okbt (renamedone renamewin entry item)
+    onClicked cancelbt (cancel renamewin)
+    windowPresent renamewin
+
+    return ()
+
+    where procentry okbt entry = do
+              text <- entryGetText entry
+              validity <- isvalid text
+              widgetSetSensitivity okbt validity
+
+          isvalidchar text = text /= "none" && text /= "" &&
+                              (and . map (\c -> not $ c `elem` text) 
+                               $ "/\0;{}[]|\\?()*&$!~`@")
+          isvalid text = 
+              if isvalidchar text
+                 then do dfe <- doesFileExist (macdir ++ "/" ++ text)
+                         dde <- doesDirectoryExist (macdir ++ "/" ++ text)
+                         return ((not dfe) && (not dde))
+                 else return False
+
+          renamedone renamewin entry old = do
+              text <- entryGetText entry
+              validity <- isvalid text
+              when (validity) $
+                 renameFile (macdir ++ "/" ++ old) (macdir ++ "/" ++ text)
+              widgetHide renamewin
+              loadList list model macdir
+                      
+          cancel renamewin = widgetHide renamewin
+
 record list model macdir xml = do
     recordwin <- xmlGetWidget xml castToWindow "recording"
     finishedbt <- xmlGetWidget xml castToButton "recdonebt"
