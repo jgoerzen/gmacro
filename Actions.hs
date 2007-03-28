@@ -10,9 +10,7 @@ import qualified Metacity
 import System.IO
 import Control.Concurrent
 import Control.Concurrent.MVar
-import System.Posix.Process
-import System.Posix.IO
-import System.Posix.Signals
+import System.Process
 
 initActions b list model macdir window xml = do
     onClicked (closebt b) (widgetDestroy window)
@@ -37,25 +35,27 @@ record model macdir xml = do
     finishedbt <- xmlGetWidget xml castToButton "recdonebt"
 
     (recordfn, recordh) <- openTempFile macdir "new-"
-    pid <- forkProcess (childproc recordh)
-    hClose recordh
-
+    (_, macro, _, ph) <- runInteractiveCommand 
+       "xmacrorec2 -k 0xffff | egrep -v '^(ButtonRelease|ButtonPress|MotionNotify)' 2>/dev/null" 
+    -- Copy the data in a separate thread so we don't interfere with GUI
+    mv <- newEmptyMVar
+    forkIO $ do hSetBuffering macro NoBuffering
+                macroc <- hGetContents macro
+                hPutStr recordh macroc
+                putMVar mv ()
+    
     -- Intercept the click of the close button.  Don't let it destroy
     -- the widget (we'll need it again for the next recording)
-    onDelete recordwin (\_ -> recorddone recordwin pid >> return True)
-    onClicked finishedbt (recorddone recordwin pid)
+    onDelete recordwin (\_ -> recorddone recordwin macro ph recordh mv >> 
+                              return True)
+    onClicked finishedbt (recorddone recordwin macro ph recordh mv)
     windowPresent recordwin
     return ()
-    where childproc recordh = do
-              handleToFd recordh >>= (\fd -> dupTo fd stdOutput)
-              --hClose recordh
-              executeFile "sh" True ["-c", 
-                "xmacrorec2 -k 0xffff 2>/dev/null | egrep -v '^(ButtonRelease|ButtonPress|MotionNotify)'"] Nothing
-
-
-          recorddone recordwin pid = do
-              signalProcess sigHUP pid
-              getProcessStatus True False pid
+    where recorddone recordwin macro ph recordh mv = do
+              terminateProcess ph
+              takeMVar mv
               widgetHide recordwin
+              hClose macro
+              hClose recordh
               loadList model macdir
 
