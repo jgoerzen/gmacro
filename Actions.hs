@@ -35,27 +35,27 @@ record model macdir xml = do
     finishedbt <- xmlGetWidget xml castToButton "recdonebt"
 
     (recordfn, recordh) <- openTempFile macdir "new-"
-    (_, macro, _, ph) <- runInteractiveCommand 
-       "xmacrorec2 -k 0xffff | egrep -v '^(ButtonRelease|ButtonPress|MotionNotify)' 2>/dev/null" 
-    -- Copy the data in a separate thread so we don't interfere with GUI
-    mv <- newEmptyMVar
-    forkIO $ do hSetBuffering macro NoBuffering
-                macroc <- hGetContents macro
-                hPutStr recordh macroc
-                putMVar mv ()
-    
+    (c1, macroh, c2, xmacroph) <- runInteractiveProcess "xmacrorec2"
+                                   ["-k", "0xffff"] Nothing Nothing
+    --hClose c1
+    --hClose c2
+
+    -- runProcess closes macroh and recordh automatically
+    grepph <- runProcess "egrep" ["-v", "^(ButtonRelease|ButtonPress|MotionNotify)"]
+               Nothing Nothing (Just macroh) (Just recordh) Nothing
+
     -- Intercept the click of the close button.  Don't let it destroy
     -- the widget (we'll need it again for the next recording)
-    onDelete recordwin (\_ -> recorddone recordwin macro ph recordh mv >> 
+    onDelete recordwin (\_ -> recorddone recordwin xmacroph grepph >> 
                               return True)
-    onClicked finishedbt (recorddone recordwin macro ph recordh mv)
+    onClicked finishedbt (recorddone recordwin xmacroph grepph)
     windowPresent recordwin
     return ()
-    where recorddone recordwin macro ph recordh mv = do
-              terminateProcess ph
-              takeMVar mv
+    where recorddone recordwin xmacroph grepph = do
+              terminateProcess xmacroph
+              waitForProcess xmacroph
+              waitForProcess grepph
+
               widgetHide recordwin
-              hClose macro
-              hClose recordh
               loadList model macdir
 
