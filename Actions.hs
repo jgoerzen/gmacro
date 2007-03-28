@@ -11,6 +11,9 @@ import System.IO
 import Control.Concurrent
 import Control.Concurrent.MVar
 import System.Process
+import Control.Exception(evaluate)
+import System.IO.Binary(hGetBlocks)
+import Data.List
 
 initActions b list model macdir window xml = do
     onClicked (closebt b) (widgetDestroy window)
@@ -37,24 +40,30 @@ record model macdir xml = do
     (recordfn, recordh) <- openTempFile macdir "new-"
     (c1, macroh, c2, xmacroph) <- runInteractiveProcess "xmacrorec2"
                                    ["-k", "0xffff"] Nothing Nothing
-    --hClose c1
-    --hClose c2
-
-    -- runProcess closes macroh and recordh automatically
-    grepph <- runProcess "egrep" ["-v", "^(ButtonRelease|ButtonPress|MotionNotify)"]
-               Nothing Nothing (Just macroh) (Just recordh) Nothing
+    
+    hClose c1
+    hClose c2
+    -- Process the output in a separate thread
+    forkIO $ do macroc <- hGetContents macroh
+                hPutStr recordh (unlines . filter wanteditems . lines $ macroc)
+                hClose recordh
+                hClose macroh
 
     -- Intercept the click of the close button.  Don't let it destroy
     -- the widget (we'll need it again for the next recording)
-    onDelete recordwin (\_ -> recorddone recordwin xmacroph grepph >> 
+    onDelete recordwin (\_ -> recorddone recordwin xmacroph >> 
                               return True)
-    onClicked finishedbt (recorddone recordwin xmacroph grepph)
+    onClicked finishedbt (recorddone recordwin xmacroph)
     windowPresent recordwin
     return ()
-    where recorddone recordwin xmacroph grepph = do
+    where wanteditems inp
+            | isPrefixOf "ButtonRelease" inp = False
+            | isPrefixOf "ButtonPress" inp = False
+            | isPrefixOf "MotionNotify" inp = False
+            | otherwise = True
+          recorddone recordwin xmacroph = do
               terminateProcess xmacroph
               waitForProcess xmacroph
-              waitForProcess grepph
 
               widgetHide recordwin
               loadList model macdir
