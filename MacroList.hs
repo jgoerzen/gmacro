@@ -12,6 +12,7 @@ import Utils
 import Buttons
 import Data.List
 import Control.Monad
+import System.IO
 
 {- | Initialize the storage directory -}
 initDir xml = do
@@ -77,16 +78,26 @@ loadList list model macdir = do
     dir <- getAppUserDataDirectory "gmacro"
     files' <- getDirectoryContents dir
     let files = sort . filter (\f -> f /= "." && f /= "..") $ files'
-    print "ML79"
+    print "ML79" >> hFlush stdout
     bindings <- getMacroBindings
-    print "ML80"
+    print "ML80" >> hFlush stdout
 
-    treeViewGetSelection list >>= treeSelectionUnselectAll
+    selection <- treeViewGetSelection list
+    print "ML80a" >> hFlush stdout
+    rows <- treeSelectionGetSelectedRows selection
+    print "ML80b" >> hFlush stdout
+    when (rows /= [])
+       (print "ML80c" >> hFlush stdout >> treeSelectionUnselectAll selection)
+    print "ML82" >> hFlush stdout
+    -- Clear the list, but only if it wasn't empty to start with.
     MV.listStoreClear model
-    print "ML84"
+    MV.listStoreAppend model ("foo", "bar")
+
+    print "ML84" >> hFlush stdout
     mapM_ (addrow bindings) files
+    MV.listStoreRemove model 0 
     where addrow bindings file = 
-           do print "ML87"
+           do print "ML87" >> hFlush stdout
               MV.listStoreAppend model (file, binding)
            where binding = case lookup file bindings of
                               Nothing -> "none"
