@@ -11,6 +11,7 @@ homepage: http://software.complete.org/gmacro
 Category: Network
 Synopsis: Keyboard macro record/binding for X
 Build-Depends: base, unix, gtk, gconf, glade
+data-files: gmacro.glade
 
 Executable: gmacro
 Main-Is: gmacro.hs

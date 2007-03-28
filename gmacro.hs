@@ -8,9 +8,12 @@ import System.Directory
 import MacroList
 import Buttons
 import Actions(initActions)
+import Paths_gmacro(getDataFileName)
 
 main = do
     initGUI
+    gladefn <- getDataFileName "gmacro.glade"
+    -- FIXME: use this for release: Just xml <- xmlNew gladefn
     Just xml <- xmlNew "gmacro.glade"
     macdir <- initDir xml
 
